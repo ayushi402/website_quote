@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="res_config_settings_inherit_website_quote" model="ir.ui.view">
+        <field name="name">res.config.settings.website_quote</field>
+        <field name="model">res.config.settings</field>
+        <field name="inherit_id" ref="website.res_config_settings_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//app[@name='website']" position="inside">
+                <block title="Website Quote">
+                    <setting id="website_quote_setting">
+                        <field name="disable_checkout"/>
+                    </setting>
+                </block>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="view_order_form_quote_feedback" model="ir.ui.view">
+        <field name="name">sale.order.form.quote.feedback</field>
+        <field name="model">sale.order</field>
+        <field name="inherit_id" ref="sale.view_order_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='payment_term_id']" position="after">
+                <field name="website_quote_feedback"/>
+                <field name="is_quote_request"/>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="res_config_settings_view_form_rma"
+            model="ir.ui.view">
+        <field name="name">res.config.settings.view.form.rma</field>
+        <field name="model">res.config.settings</field>
+        <field name="inherit_id" ref="base.res_config_settings_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//form" position="inside">
+                <app name="rma_settings"
+                     string="RMA Settings"
+                     data-string="RMA Settings"
+                     groups="base.group_system">
+
+                    ```
+                    <block title="RMA Settings">
+
+                        <setting string="Repair Management"
+                                 help="Allow repair of products returned through RMA.">
+                            <field name="repair_management"/>
+                        </setting>
+
+                        <setting string="Quotes Cancellation"
+                                 help="Allow cancellation before quotation confirmation.">
+                            <field name="quote_cancel"/>
+                        </setting>
+
+                        <setting string="Show RMA Stages to Customer"
+                                 help="Allow customers to see their RMA status.">
+                            <field name="show_rma_stage_customer"/>
+                        </setting>
+
+                    </block>
+
+                    <block title="Return Policy">
+
+                        <setting string="Return Period"
+                                 help="Configure the allowed return period and its date basis.">
+                            <div class="content-group">
+                                <div class="row mt16">
+                                    <label for="return_days"
+                                           class="col-lg-4"/>
+                                    <field name="return_days"
+                                           class="oe_inline"/>
+                                    <span>days on the basis of</span>
+                                    <field name="return_date_basis"
+                                           class="oe_inline"/>
+                                </div>
+                            </div>
+                        </setting>
+
+                        <setting string="Allow Product Return per Order Line"
+                                 help="Show a return button for each eligible order line.">
+                            <field name="allow_return_per_order_line"/>
+                        </setting>
+
+                        <setting string="Disable Return Once RMA Generated"
+                                 help="Hide the return option after an RMA has been generated for an order.">
+                            <field name="disable_return_once_rma_generated"/>
+                        </setting>
+
+                    </block>
+
+                    <block title="RMA Mail Notification">
+
+                        <setting string="Enable Notification for Admin"
+                                 help="Send RMA information to the administrator via email.">
+                            <field name="enable_rma_admin_notification"/>
+                            <div class="content-group"
+                                 invisible="not enable_rma_admin_notification">
+                                <label for="rma_admin_email_template_id"/>
+                                <field name="rma_admin_email_template_id"
+                                       options="{'no_create': True}"/>
+                            </div>
+                        </setting>
+
+                        <setting string="Enable Notification for Customer"
+                                 help="Send RMA information to the customer via email.">
+                            <field name="enable_rma_customer_notification"/>
+                            <div class="content-group"
+                                 invisible="not enable_rma_customer_notification">
+                                <label for="rma_customer_email_template_id"/>
+                                <field name="rma_customer_email_template_id"
+                                       options="{'no_create': True}"/>
+                            </div>
+                        </setting>
+
+                    </block>
+
+                </app>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>
+

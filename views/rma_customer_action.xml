@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+        <!-- RMA Customer Action -->
+    <record id="action_rma_customer" model="ir.actions.act_window">
+        <field name="name">RMA Requests</field>
+        <field name="res_model">rma.customer</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <!-- RMA Status Action -->
+    <record id="action_rma_status" model="ir.actions.act_window">
+        <field name="name">RMA Status</field>
+        <field name="res_model">rma.status</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <!-- RMA Return Request Type Action -->
+    <record id="action_rma_request_type"
+            model="ir.actions.act_window">
+        <field name="name">Return Request Types</field>
+        <field name="res_model">rma.request.type</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+</odoo>

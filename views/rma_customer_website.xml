@@ -1,0 +1,740 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <template id="portal_my_home_return_order" inherit_id="portal.portal_my_home" priority="100">
+        <xpath expr="//div[contains(@class,'o_portal_docs')]" position="inside">
+            <div id="portal_return_orders" class="o_portal_doc">
+                <t t-call="portal.portal_docs_entry">
+                    <t t-set="title">Return Orders</t>
+                    <t t-set="text">View and track your return requests</t>
+                    <t t-set="url" t-value="'/my/return-orders'"/>
+                    <t t-set="icon" t-value="'/account/static/src/img/bill.svg'"/>
+                    <t t-set="placeholder_count" t-value="'return_count'"/>
+                </t>
+            </div>
+        </xpath>
+    </template>
+
+
+    <template id="order_return_button_website" inherit_id="sale.sale_order_portal_template" name="Return Order Button">
+        <xpath expr="//div[@id='print_invoice_sidebar_button']" position="after">
+
+            <a t-if="sale_order.state == 'sale'
+                 and any(picking.state == 'done'
+                         for picking in sale_order.picking_ids)"
+               t-att-href="'/my/return-orders/new?sale_order_id=%s' % sale_order.id"
+               class="btn btn-secondary">
+                <i class="fa fa-undo me-1"/>
+                Return products
+            </a>
+        </xpath>
+    </template>
+
+
+    <template id="order_return_wizard_detail" name="Return Order Request">
+        <t t-call="website.layout">
+            <div class="container py-5">
+                <div class="row justify-content-center">
+                    <div class="col-lg-8">
+                        <h2 class="mb-4">Return Order Request</h2>
+
+                        <form action="/my/return-orders/submit"
+                              method="post"
+                              class="card p-4 shadow-sm">
+
+                            <input type="hidden"
+                                   name="csrf_token"
+                                   t-att-value="request.csrf_token()"/>
+                            <input type="hidden"
+                                   name="customer"
+                                   t-att-value="request.env.user.partner_id.id"/>
+
+                            <div class="mb-3">
+                                <label class="form-label">Sales Order</label>
+                                <input type="text"
+                                       class="form-control"
+                                       t-att-value="sale_order.name"
+                                       readonly="readonly"/>
+                                <input type="hidden"
+                                       name="order_id"
+                                       t-att-value="sale_order.id"/>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Customer</label>
+                                <input type="text"
+                                       class="form-control"
+                                       t-att-value="request.env.user.partner_id.name"
+                                       readonly="readonly"/>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="product_id" class="form-label">
+                                    Product
+                                </label>
+                                <select name="product_id"
+                                        id="product_id"
+                                        class="form-select"
+                                        required="required">
+                                    <option value="">Select a product</option>
+                                    <t t-foreach="sale_order.order_line.filtered(lambda line: not line.display_type)"
+                                       t-as="line">
+                                        <option t-att-value="line.product_id.id"
+                                                t-att-selected="rma and rma.product.id == line.product_id.id">
+                                            <t t-out="line.product_id.display_name"/>
+                                        </option>
+                                    </t>
+                                </select>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="return_quantity" class="form-label">
+                                    Return Quantity
+                                </label>
+                                <input type="number"
+                                       id="return_quantity"
+                                       name="return_quantity"
+                                       class="form-control"
+                                       min="0.01"
+                                       step="0.01"
+                                       required="required"
+                                       t-att-value="rma and rma.return_quantity or ''"/>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="return_request_type" class="form-label">
+                                    Return Request Type
+                                </label>
+                                <select name="return_request_type"
+                                        id="return_request_type"
+                                        class="form-select"
+                                        required="required">
+                                    <option value="">Select request type</option>
+                                    <t t-foreach="request_types" t-as="request_type">
+                                        <option t-att-value="request_type.id"
+                                                t-att-selected="rma and rma.return_request_type and rma.return_request_type.id == request_type.id">
+                                            <t t-out="request_type.name"/>
+                                        </option>
+                                    </t>
+                                </select>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="reason" class="form-label">
+                                    Reason for Return
+                                </label>
+                                <textarea id="reason"
+                                          name="reason"
+                                          class="form-control"
+                                          rows="4"
+                                          required="required">
+                                    <t t-esc="rma.reason if rma else ''"/>
+                                </textarea>
+                            </div>
+
+                            <div class="form-check mb-4">
+                                <input type="checkbox"
+                                       id="customer_consent"
+                                       name="customer_consent"
+                                       value="1"
+                                       class="form-check-input"
+                                       required="required"/>
+                                <label for="customer_consent"
+                                       class="form-check-label">
+                                    I confirm that the return information is correct.
+                                </label>
+                            </div>
+
+                            <input type="hidden"
+                                   name="rma_id"
+                                   t-att-value="rma and rma.id or ''"/>
+
+                            <div class="d-flex gap-2">
+                                <button type="submit" class="btn btn-primary">
+                                    <t t-if="rma">
+                                        Update Return Request
+                                    </t>
+                                    <t t-else="">
+                                        Submit Return Request
+                                    </t>
+                                </button>
+                                <a href="/my/return-orders"
+                                   class="btn btn-secondary">
+                                    Cancel
+                                </a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </t>
+    </template>
+
+    <!-- Portal list page for return orders -->
+    <template id="portal_return_orders" name="Portal: Return Orders">
+        <t t-call="website.layout">
+            <div class="container mt16 mb16">
+                <h1>Return Orders</h1>
+                <t t-if="not rmas or len(rmas) == 0">
+                    <div class="alert alert-info">You have no return requests.</div>
+                </t>
+                <t t-else="">
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>RMA</th>
+                                    <th>Order</th>
+                                    <th>Date</th>
+                                    <th>Product</th>
+                                    <th>Qty</th>
+                                    <th>Reason</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr t-foreach="rmas" t-as="rma">
+                                    <td>
+                                        <a t-att-href="'/my/return-orders/%s' % rma.id">
+                                            <t t-esc="rma.name"/>
+                                        </a>
+                                    </td>
+                                    <td>
+                                        <t t-esc="rma.order and rma.order.name or ''"/>
+                                    </td>
+                                    <td>
+                                        <t t-esc="rma.date"/>
+                                    </td>
+                                    <td>
+                                        <t t-esc="rma.product and rma.product.display_name or ''"/>
+                                    </td>
+                                    <td>
+                                        <t t-esc="rma.return_quantity"/>
+                                    </td>
+                                    <td>
+                                        <t t-esc="rma.reason or ''"/>
+                                    </td>
+                                    <td>
+                                        <t t-esc="rma.status and rma.status.name or ''"/>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </t>
+                <a class="btn btn-secondary mt-3" href="/my">Back to My Account</a>
+            </div>
+        </t>
+    </template>
+
+    <template id="portal_return_order_detail" name="Portal: Return Order Detail">
+        <t t-call="website.layout">
+            <div class="container mt16 mb16">
+                <div class="card shadow-sm">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h3 class="mb-0">Return Request Details</h3>
+                        <a href="/my/return-orders" class="btn btn-secondary btn-sm">Back to Return Orders</a>
+                    </div>
+                    <div class="card-body">
+                        <dl class="row mb-0">
+                            <dt class="col-sm-3">RMA</dt>
+                            <dd class="col-sm-9"><t t-esc="rma.name or ''"/></dd>
+
+                            <dt class="col-sm-3">Order</dt>
+                            <dd class="col-sm-9"><t t-esc="rma.order and rma.order.name or ''"/></dd>
+
+                            <dt class="col-sm-3">Customer</dt>
+                            <dd class="col-sm-9"><t t-esc="rma.customer and rma.customer.name or ''"/></dd>
+
+                            <dt class="col-sm-3">Product</dt>
+                            <dd class="col-sm-9"><t t-esc="rma.product and rma.product.display_name or ''"/></dd>
+
+                            <dt class="col-sm-3">Return Quantity</dt>
+                            <dd class="col-sm-9"><t t-esc="rma.return_quantity or 0"/></dd>
+
+                            <dt class="col-sm-3">Return Type</dt>
+                            <dd class="col-sm-9"><t t-esc="rma.return_request_type and rma.return_request_type.name or ''"/></dd>
+
+                            <dt class="col-sm-3">Reason</dt>
+                            <dd class="col-sm-9"><t t-esc="rma.reason or ''"/></dd>
+
+                            <dt class="col-sm-3">Remarks</dt>
+                            <dd class="col-sm-9"><t t-esc="rma.remarks or ''"/></dd>
+
+                            <dt class="col-sm-3">Customer Consent</dt>
+                            <dd class="col-sm-9"><t t-esc="'Yes' if rma.customer_consent else 'No'"/></dd>
+
+                            <dt class="col-sm-3">Date</dt>
+                            <dd class="col-sm-9"><t t-esc="rma.date"/></dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </t>
+    </template>
+
+    <template id="portal_return_order_page" name="Portal: Return Order Page">
+        <t t-call="website.layout">
+            <style>
+                .o_rma_modal_wrap {
+                    display: flex;
+                    justify-content: center;
+                    align-items: flex-start;
+                    padding: 24px 16px;
+                }
+                .o_rma_modal {
+                    display: flex;
+                    flex-direction: column;
+                    width: 100%;
+                    max-width: 720px;
+                    height: 540px;
+                    max-height: calc(100vh - 48px);
+                    background: #fff;
+                    border: 1px solid #e5e7eb;
+                    box-shadow: 0 1px 0 rgba(0, 0, 0, 0.02);
+                    border-radius: 4px;
+                    overflow: hidden;
+                    color: #2f2f2f;
+                }
+                .o_rma_modal__header {
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    min-height: 48px;
+                    padding: 10px 14px;
+                    border-bottom: 1px solid #e8e8e8;
+                    background: #fff;
+                    flex-shrink: 0;
+                }
+                .o_rma_modal__title {
+                    margin: 0;
+                    font-size: 16px;
+                    font-weight: 700;
+                    color: #2e2e2e;
+                    letter-spacing: 0.01em;
+                }
+                .o_rma_modal__close {
+                    display: inline-flex;
+                    align-items: center;
+                    justify-content: center;
+                    width: 24px;
+                    height: 24px;
+                    padding: 0;
+                    color: #6b7280;
+                    font-size: 18px;
+                    line-height: 1;
+                    text-decoration: none;
+                    border: none;
+                    background: transparent;
+                }
+                .o_rma_modal__close:hover,
+                .o_rma_modal__close:focus {
+                    color: #374151;
+                    text-decoration: none;
+                }
+                .o_rma_modal__body {
+                    display: flex;
+                    flex-direction: column;
+                    flex: 1 1 auto;
+                    min-height: 0;
+                    padding: 0;
+                    background: #fff;
+                }
+                .o_rma_table_wrap {
+                    overflow-x: auto;
+                    overflow-y: auto;
+                    border-bottom: 1px solid #ececec;
+                    flex: 0 0 220px;
+                    max-height: 220px;
+                    background: #fff;
+                }
+                .o_rma_table {
+                    width: 100%;
+                    border-collapse: collapse;
+                    margin: 0;
+                    table-layout: fixed;
+                    min-width: 620px;
+                }
+                .o_rma_table thead th {
+                    padding: 10px 10px;
+                    font-size: 11px;
+                    line-height: 1.2;
+                    font-weight: 700;
+                    color: #4b5563;
+                    background: #fff;
+                    border-bottom: 1px solid #ececec;
+                    text-align: center;
+                    text-transform: none;
+                }
+                .o_rma_table thead th:first-child {
+                    text-align: left;
+                }
+                .o_rma_table tbody td {
+                    padding: 10px 10px;
+                    vertical-align: top;
+                    border-bottom: 1px solid #f0f0f0;
+                    color: #333;
+                    font-size: 12px;
+                }
+                .o_rma_product_cell {
+                    display: flex;
+                    align-items: center;
+                    gap: 10px;
+                    min-width: 180px;
+                }
+                .o_rma_product_thumb {
+                    width: 54px;
+                    height: 48px;
+                    object-fit: contain;
+                    border: 1px solid #efefef;
+                    border-radius: 4px;
+                    background: #fafafa;
+                    flex-shrink: 0;
+                }
+                .o_rma_product_meta {
+                    min-width: 0;
+                    line-height: 1.35;
+                }
+                .o_rma_product_name {
+                    display: block;
+                    font-size: 12px;
+                    font-weight: 600;
+                    color: #2b2b2b;
+                    line-height: 1.35;
+                    margin-bottom: 2px;
+                    word-break: break-word;
+                }
+                .o_rma_product_price,
+                .o_rma_product_qty {
+                    display: block;
+                    font-size: 11px;
+                    color: #6b7280;
+                    line-height: 1.35;
+                }
+                .o_rma_form_control,
+                .o_rma_form_select,
+                .o_rma_form_textarea {
+                    width: 100%;
+                    min-width: 0;
+                    height: 28px;
+                    padding: 4px 8px;
+                    border: 1px solid #d9e2ec;
+                    border-radius: 5px;
+                    background: #fff;
+                    color: #333;
+                    font-size: 12px;
+                    box-shadow: none;
+                }
+                .o_rma_form_textarea {
+                    min-height: 28px;
+                    height: 28px;
+                    resize: vertical;
+                    line-height: 1.4;
+                }
+                .o_rma_form_control:focus,
+                .o_rma_form_select:focus,
+                .o_rma_form_textarea:focus {
+                    border-color: #9cb3d0;
+                    box-shadow: 0 0 0 0.15rem rgba(100, 116, 139, 0.12);
+                    outline: none;
+                }
+                .o_rma_form_control::placeholder,
+                .o_rma_form_textarea::placeholder {
+                    color: #9aa3af;
+                }
+                .o_rma_policy_block {
+                    display: block;
+                    width: 100%;
+                    padding: 12px 12px 10px;
+                    border-top: 1px solid #f0f0f0;
+                    background: #fff;
+                    flex-shrink: 0;
+                    box-sizing: border-box;
+                }
+                .o_rma_policy_head {
+                    margin: 0 0 8px;
+                    font-size: 14px;
+                    font-weight: 600;
+                    color: #3e3e3e;
+                }
+                .o_rma_policy_box {
+                    height: 120px;
+                    overflow-y: auto;
+                    padding: 10px 12px;
+                    border: 1px solid #dfe4ea;
+                    border-radius: 4px;
+                    background: #fafafa;
+                    color: #525a62;
+                    font-size: 11px;
+                    line-height: 1.6;
+                }
+                .o_rma_policy_box p,
+                .o_rma_policy_box ul,
+                .o_rma_policy_box ol,
+                .o_rma_policy_box li {
+                    font-size: 11px;
+                    line-height: 1.6;
+                    margin-bottom: 6px;
+                }
+                .o_rma_checkbox_wrap {
+                    display: flex;
+                    align-items: center;
+                    gap: 10px;
+                    width: 100%;
+                    min-height: 40px;
+                    padding: 10px 0 0;
+                    margin-top: 12px;
+                    border-top: 1px solid #f0f0f0;
+                    background: #fff;
+                    box-sizing: border-box;
+                }
+                .o_rma_checkbox_wrap .form-check-input {
+                    display: inline-block !important;
+                    position: static !important;
+                    width: 14px;
+                    height: 14px;
+                    margin: 0;
+                    border: 1px solid #c7cfda;
+                    border-radius: 3px;
+                    background-color: #fff;
+                    opacity: 1 !important;
+                    visibility: visible !important;
+                    appearance: checkbox;
+                    -webkit-appearance: checkbox;
+                    -moz-appearance: checkbox;
+                    flex-shrink: 0;
+                }
+                .o_rma_checkbox_wrap .form-check-label {
+                    display: inline-block;
+                    margin: 0;
+                    font-size: 12px;
+                    color: #414a54;
+                    line-height: 1.3;
+                }
+                .o_rma_modal__footer {
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    gap: 12px;
+                    min-height: 56px;
+                    padding: 10px 12px;
+                    border-top: 1px solid #ececec;
+                    background: #fff;
+                    flex-shrink: 0;
+                }
+                .o_rma_modal__footer .btn {
+                    display: inline-flex;
+                    align-items: center;
+                    justify-content: center;
+                    height: 36px;
+                    min-width: 43px;
+                    padding: 0 12px;
+                    border-radius: 4px;
+                    font-size: 12px;
+                    font-weight: 500;
+                    line-height: 1;
+                }
+                .o_rma_modal__footer .btn-secondary {
+                    background: #77879c;
+                    border-color: #77879c;
+                    color: #fff;
+                }
+                .o_rma_modal__footer .btn-primary {
+                    min-width: 108px;
+                    background: #5d4b6d;
+                    border-color: #5d4b6d;
+                    color: #fff;
+                }
+                @media (max-width: 767px) {
+                    .o_rma_modal_wrap {
+                        padding: 12px 8px;
+                    }
+                    .o_rma_modal {
+                        max-width: 100%;
+                        height: 100%;
+                        max-height: calc(100vh - 24px);
+                    }
+                    .o_rma_table {
+                        min-width: 640px;
+                    }
+                }
+            </style>
+
+            <div class="o_rma_modal_wrap">
+                <div class="o_rma_modal">
+                    <div class="o_rma_modal__header">
+                        <h4 class="o_rma_modal__title">Return Order</h4>
+                        <a href="/my/return-orders" class="o_rma_modal__close" aria-label="Close">×</a>
+                    </div>
+
+                    <form action="/my/return-orders/submit"
+                          method="post"
+                          class="o_rma_modal__body">
+                        <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+                        <input type="hidden" name="order_id" t-att-value="sale_order.id"/>
+
+                        <t t-set="form_data" t-value="form_data or {}"/>
+                        <t t-if="error_message">
+                            <div class="alert alert-danger mt-3 mb-3">
+                                <t t-esc="error_message"/>
+                            </div>
+                        </t>
+
+                        <div class="o_rma_table_wrap">
+                            <table class="o_rma_table">
+                                <thead>
+                                    <tr>
+                                        <th style="width: 29%;">Product</th>
+                                        <th style="width: 13%;">Return Qty</th>
+                                        <th style="width: 17%;">Return type</th>
+                                        <th style="width: 22%;">Reason</th>
+                                        <th style="width: 19%;">Remarks</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <t t-foreach="sale_order.order_line.filtered(lambda l: not l.display_type and l.product_id.type != 'service')"
+                                       t-as="line">
+                                        <tr>
+                                            <td>
+                                                <div class="o_rma_product_cell">
+                                                    <img t-att-src="'/web/image/product.product/%s/image_128' % line.product_id.id"
+                                                         class="o_rma_product_thumb"
+                                                         t-att-alt="line.product_id.display_name"/>
+                                                    <div class="o_rma_product_meta">
+                                                        <span class="o_rma_product_name">
+                                                            <t t-esc="line.product_id.display_name"/>
+                                                        </span>
+                                                        <span class="o_rma_product_price">
+                                                            <t t-esc="line.price_unit"
+                                                               t-options="{'widget': 'monetary', 'display_currency': sale_order.currency_id}"/>
+                                                        </span>
+                                                        <span class="o_rma_product_qty">
+                                                            Qty: <t t-esc="line.product_uom_qty"/>
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <t t-set="max_return_qty" t-value="int(float(line.qty_delivered or line.product_uom_qty or 0))"/>
+                                                <select class="o_rma_form_select" t-att-name="'return_qty_%s' % line.id">
+                                                    <option value="0" t-att-selected="form_data.get('return_qty_%s' % line.id) == '0'">0</option>
+                                                    <t t-foreach="range(1, max_return_qty + 1)" t-as="qty">
+                                                        <option t-att-value="qty" t-att-selected="str(form_data.get('return_qty_%s' % line.id, '')) == str(qty)"><t t-esc="qty"/></option>
+                                                    </t>
+                                                </select>
+                                            </td>
+                                            <td>
+                                                <select class="o_rma_form_select" t-att-name="'return_type_%s' % line.id">
+                                                    <option value="" t-att-selected="not form_data.get('return_type_%s' % line.id)">Select Type</option>
+                                                    <t t-foreach="return_types" t-as="return_type">
+                                                        <option t-att-value="return_type.id" t-att-selected="str(form_data.get('return_type_%s' % line.id, '')) == str(return_type.id)"><t t-esc="return_type.display_name"/></option>
+                                                    </t>
+                                                </select>
+                                            </td>
+                                            <td>
+                                                <textarea class="o_rma_form_textarea"
+                                                          rows="1"
+                                                          placeholder="Enter reason"
+                                                          t-att-name="'reason_%s' % line.id"><t t-esc="form_data.get('reason_%s' % line.id, '')"/></textarea>
+                                            </td>
+                                            <td>
+                                                <input type="text"
+                                                       class="o_rma_form_control"
+                                                       placeholder="Add remark"
+                                                       t-att-name="'remarks_%s' % line.id"
+                                                       t-att-value="form_data.get('remarks_%s' % line.id, '')"/>
+                                            </td>
+                                        </tr>
+                                    </t>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="o_rma_policy_block">
+                            <h6 class="o_rma_policy_head">Return policy:</h6>
+                            <div class="o_rma_policy_box">
+                                <t t-if="return_policy">
+<!--                                    <div t-field="return_policy"/>-->
+                                </t>
+                                <t t-else="">
+                                    <p class="mb-0">Please review the return and refund policy before submitting your request.</p>
+                                </t>
+                            </div>
+
+                            <div class="form-check o_rma_checkbox_wrap">
+                                <input type="checkbox"
+                                       class="form-check-input"
+                                       id="agree_return_policy"
+                                       name="customer_consent"
+                                       value="1"
+                                       required="required"
+                                       t-att-checked="form_data.get('customer_consent') in ['1', 'true', 'True', 'on', True]"/>
+                                <label class="form-check-label" for="agree_return_policy">I Agree</label>
+                            </div>
+                        </div>
+
+                        <div class="o_rma_modal__footer">
+                            <a href="/my/return-orders" class="btn btn-secondary">Close</a>
+                            <button type="submit" class="btn btn-primary">Confirm Return</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </t>
+    </template>
+    <!-- Portal detail page for a single return order -->
+    <!--    <template id="portal_return_order_page" name="Portal: Return Order Page">-->
+    <!--        <t t-call="website.layout">-->
+    <!--            <div class="container mt16 mb16">-->
+    <!--                <div class="row">-->
+    <!--                    <div class="col-12">-->
+    <!--                        <h1>-->
+    <!--                            <t t-esc="rma.name"/>-->
+    <!--                        </h1>-->
+    <!--                        <dl class="row">-->
+    <!--                            <dt class="col-sm-3">Order</dt>-->
+    <!--                            <dd class="col-sm-9">-->
+    <!--                                <t t-esc="rma.order and rma.order.name or ''"/>-->
+    <!--                            </dd>-->
+
+    <!--                            <dt class="col-sm-3">Date</dt>-->
+    <!--                            <dd class="col-sm-9">-->
+    <!--                                <t t-esc="rma.date"/>-->
+    <!--                            </dd>-->
+
+    <!--                            <dt class="col-sm-3">Product</dt>-->
+    <!--                            <dd class="col-sm-9">-->
+    <!--                                <t t-esc="rma.product and rma.product.display_name or ''"/>-->
+    <!--                            </dd>-->
+
+    <!--                            <dt class="col-sm-3">Return Quantity</dt>-->
+    <!--                            <dd class="col-sm-9">-->
+    <!--                                <t t-esc="rma.return_quantity"/>-->
+    <!--                            </dd>-->
+
+    <!--                            <dt class="col-sm-3">Reason</dt>-->
+    <!--                            <dd class="col-sm-9">-->
+    <!--                                <t t-esc="rma.reason or ''"/>-->
+    <!--                            </dd>-->
+
+    <!--                            <dt class="col-sm-3">Status</dt>-->
+    <!--                            <dd class="col-sm-9">-->
+    <!--                                <t t-esc="rma.status and rma.status.name or ''"/>-->
+    <!--                            </dd>-->
+
+    <!--                            <dt class="col-sm-3">Resolved</dt>-->
+    <!--                            <dd class="col-sm-9">-->
+    <!--                                <t t-esc="rma.resolve_date or ''"/>-->
+    <!--                            </dd>-->
+    <!--                        </dl>-->
+    <!--                        <a class="btn btn-secondary" href="/my/return-orders">Back to Return Orders</a>-->
+    <!--                        <a class="btn btn-primary ms-2" t-att-href="'/my/return-orders/%s/edit' % rma.id">Edit Return Request</a>-->
+    <!--                    </div>-->
+    <!--                </div>-->
+    <!--            </div>-->
+    <!--        </t>-->
+    <!--    </template>-->
+
+
+</odoo>
+
+

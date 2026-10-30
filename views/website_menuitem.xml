@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+
+    <record id="action_request_quote" model="ir.actions.act_window">
+        <field name="name">Request Quote</field>
+        <field name="res_model">sale.order</field>
+        <field name="view_mode">list,form</field>
+        <field name="domain">[
+            ('is_quote_request', '=', True),
+            ('state', '=', 'draft')
+            ]
+        </field>
+    </record>
+
+    <menuitem
+            id="menu_orders_request_quote"
+            name="Request Quote"
+            parent="website_sale.menu_orders"
+            action="action_request_quote"
+            sequence="3"/>
+
+
+    <!-- Root Menu -->
+    <menuitem id="menu_rma_root"
+              name="RMA Management"
+              sequence="30"/>
+
+    <!-- Customer RMA Menu -->
+    <menuitem id="menu_rma_customer"
+              name="RMA Requests"
+              parent="menu_rma_root"
+              action="action_rma_customer"
+              sequence="10"/>
+
+    <!-- Configuration Menu -->
+    <menuitem id="menu_rma_configuration"
+              name="Configuration"
+              parent="menu_rma_root"
+              sequence="90"/>
+
+    <menuitem id="menu_rma_status"
+              name="RMA Status"
+              parent="menu_rma_configuration"
+              action="action_rma_status"
+              sequence="10"/>
+
+    <menuitem id="menu_rma_request_type"
+              name="Return Request Types"
+              parent="menu_rma_configuration"
+              action="action_rma_request_type"
+              sequence="20"/>
+
+
+</odoo>

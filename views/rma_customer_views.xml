@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+
+    <record id="seq_rma_customer" model="ir.sequence">
+        <field name="name">RMA Customer</field>
+        <field name="code">rma.customer</field>
+        <field name="prefix">RMA/</field>
+        <field name="padding">5</field>
+        <field name="company_id" eval="False"/>
+    </record>
+
+    <!-- RMA Customer List View -->
+    <record id="view_rma_customer_list" model="ir.ui.view">
+        <field name="name">rma.customer.list</field>
+        <field name="model">rma.customer</field>
+        <field name="arch" type="xml">
+            <list string="RMA Requests">
+                <field name="name"/>
+                <field name="order"/>
+                <field name="date"/>
+                <field name="customer"/>
+                <field name="product"/>
+                <field name="return_quantity"/>
+                <field name="status"/>
+                <field name="return_request_type"/>
+                <field name="resolve_date"/>
+                <field name="full_refund"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- RMA Customer Form View -->
+    <record id="view_rma_customer_form" model="ir.ui.view">
+        <field name="name">rma.customer.form</field>
+        <field name="model">rma.customer</field>
+        <field name="arch" type="xml">
+            <form string="RMA Request">
+                <sheet>
+                    <div class="oe_title">
+                        <label for="name"/>
+                        <h1>
+                            <field name="name" placeholder="RMA Reference"/>
+                        </h1>
+                    </div>
+
+                    <group>
+                        <group string="Return Details">
+                            <field name="order"/>
+                            <field name="customer"/>
+                            <field name="product"/>
+                            <field name="date"/>
+                            <field name="return_quantity"/>
+                            <field name="return_request_type"/>
+                            <field name="status"/>
+                        </group>
+
+                        <group string="Resolution Details">
+                            <field name="resolve_date"/>
+                            <field name="customer_consent"/>
+                            <field name="invoice_issue"/>
+                            <field name="product_received"/>
+                            <field name="full_refund"/>
+                        </group>
+                    </group>
+
+                    <notebook>
+                        <page string="Reason">
+                            <field name="reason"
+                                   placeholder="Enter the reason for the return..."/>
+                        </page>
+
+                        <page string="Refund Details">
+                            <group>
+                                <field name="currency"/>
+                                <field name="amount"/>
+                                <field name="tax_ids"/>
+                            </group>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <!-- RMA Status List View -->
+    <record id="view_rma_status_list" model="ir.ui.view">
+        <field name="name">rma.status.list</field>
+        <field name="model">rma.status</field>
+        <field name="arch" type="xml">
+            <list string="RMA Status" editable="bottom">
+                <field name="sequence" widget="handle"/>
+                <field name="name"/>
+                <field name="color" widget="color"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- RMA Status Form View -->
+    <record id="view_rma_status_form" model="ir.ui.view">
+        <field name="name">rma.status.form</field>
+        <field name="model">rma.status</field>
+        <field name="arch" type="xml">
+            <form string="RMA Status">
+                <sheet>
+                    <group>
+                        <field name="name"/>
+                        <field name="sequence"/>
+                        <field name="color" widget="color"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- RMA Return Request Type List View -->
+    <record id="view_rma_request_type_list" model="ir.ui.view">
+        <field name="name">rma.request.type.list</field>
+        <field name="model">rma.request.type</field>
+        <field name="arch" type="xml">
+            <list string="Return Request Types" editable="bottom">
+                <field name="sequence" widget="handle"/>
+                <field name="name"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- RMA Return Request Type Form View -->
+    <record id="view_rma_request_type_form" model="ir.ui.view">
+        <field name="name">rma.request.type.form</field>
+        <field name="model">rma.request.type</field>
+        <field name="arch" type="xml">
+            <form string="Return Request Type">
+                <sheet>
+                    <group>
+                        <field name="name"/>
+                        <field name="sequence"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+</odoo>

@@ -1,0 +1,5 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_rma_customer_user,rma.customer,model_rma_customer,base.group_user,1,1,1,1
+access_rma_status_user,rma.status,model_rma_status,base.group_user,1,1,1,1
+access_rma_request_type_user,rma.request.type,model_rma_request_type,base.group_user,1,1,1,1
+access_return_order_detail_user,return.order.detail,model_return_order_detail,base.group_user,1,1,1,1
